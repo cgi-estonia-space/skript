@@ -166,7 +166,7 @@ def process_yaml(skript_file):
                             if asset_path is None:
                                 raise RuntimeError(f"Failed to acquire {asset}")
                             arg_name = next(iter(asset))
-                            if not combine_multiple_args:
+                            if not combine_multiple_args and arg_name != "NONAME":
                                 if len(arg_name) > 1:
                                     command_to_launch.append("--" + arg_name)
                                 else:
