@@ -1,0 +1,46 @@
+# skript 0.0.1
+# Further on it is intended to check the version, hence conforming the compatibility.
+
+asset_dir: /tmp/foo/
+
+# hardcoded - will be changed
+tests:
+  # Following structure is hardcoded, with optional assets and/or arguments.
+  ds-1234:
+    name: Failure dataset
+    author: Who
+    description: Yo
+    with-time: False
+    # Should be available via $PATH, later custom dir will be added. One of the processors from - https://github.com/cgi-estonia-space/ALUs
+    command: alus-coh
+    # The first key will be used as an argument name as well
+    assets:
+      - in_ref: S1A_IW_SLC__1SDV_20210703T055050_20210703T055117_038609_048E45_35F7.SAFE
+        url: https://foo.s3.eu.central-1.amazonaws.com/S1A_IW_SLC__1SDV_20210703T055050_20210703T055117_038609_048E45_35F7.zip
+        # hardcoded action name
+        post-process: UNPACK
+      - in_sec: S1B_IW_SLC__1SDV_20210721T055001_20210721T055028_027888_0353E2_E1B5.SAFE
+        url: https://foo.s3.eu-central-1.amazonaws.com/S1B_IW_SLC__1SDV_20210721T055001_20210721T055028_027888_0353E2_E1B5.zip
+        post-process: UNPACK
+      - orbit_ref: S1A_OPER_AUX_POEORB_OPOD_20210723T121923_V20210702T225942_20210704T005942.EOF
+        url: https://foo.s3.eu-central-1.amazonaws.com/validation/flood_in_belgium_germany/aux.zip
+        post-process: UNPACK
+      # Are fetched by the asset above
+      - orbit_sec: S1B_OPER_AUX_POEORB_OPOD_20210810T111942_V20210720T225942_20210722T005942.EOF
+      - dem: srtm_37_02.tif srtm_37_03.tif srtm_38_02.tif srtm_38_03.tif
+    arguments:
+      - sw: IW3
+      - p: VV
+      - ll: info
+      - o: /tmp/
+  # All of this would result in the following command:
+  # alus-coh --in_ref /tmp/skript/S1A_IW_SLC__1SDV_20210703T055050_20210703T055117_038609_048E45_35F7.SAFE \
+  # --in_sec /tmp/skript/S1B_IW_SLC__1SDV_20210721T055001_20210721T055028_027888_0353E2_E1B5.SAFE \
+  # --orbit_ref /tmp/skript/aux/S1A_OPER_AUX_POEORB_OPOD_20210723T121923_V20210702T225942_20210704T005942.EOF \
+  # --orbit_sec /tmp/skript/aux/S1B_OPER_AUX_POEORB_OPOD_20210810T111942_V20210720T225942_20210722T005942.EOF \
+  # --dem "/tmp/skript/aux/srtm_37_02.tif /tmp/skript/aux/srtm_37_03.tif /tmp/skript/aux/srtm_38_02.tif /tmp/skript/aux/srtm_38_03.tif" \
+  # --sw IW3 -p VV --ll info -o /tmp/
+
+  # Does not result in invocation, but whatever.
+  ds-4567:
+    name: Success dataset
