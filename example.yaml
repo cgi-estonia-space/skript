@@ -44,3 +44,17 @@ tests:
   # Does not result in invocation, but whatever.
   ds-4567:
     name: Success dataset
+  # Another type of processor
+  envisat-2004-parnu:
+    name: Envisat example ds
+    command: asar_focus
+    # NONAME implies for a positional argument without specific name
+    assets:
+      - NONAME: ASA_IM__0PNPDK20040109_194924_000000182023_00157_09730_1479.N1
+        url: s3://bucket/folder/ASA_IM__0PNPDK20040109_194924_000000182023_00157_09730_1479.N1
+      - NONAME: ASAR_Auxiliary_Files
+        url: https://earth.esa.int/eogateway/documents/20142/37627/ASAR_auxiliary_files.zip/5fdc3ebf-adaa-5d9e-2785-c878a34aae82
+        post-process: UNPACK
+      - NONAME: DOR_VOR_AX_d
+        url: s3://bucket/folder/DOR_VOR_AX_d.zip
+        post-process: UNPACK

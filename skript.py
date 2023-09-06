@@ -1,14 +1,21 @@
 import argparse
 import subprocess
+import sys
+
 import yaml
 import os
-import requests
-from tqdm import tqdm
 
 import unpack
+import uri_fetch
 
-asset_dir = "/tmp/"
-asset_stash_dir = "/tmp/"
+
+class AssetLocations:
+    def __init__(self, assets, stash):
+        self.asset_dir = assets
+        self.stash_dir = stash
+
+
+asset_locations = AssetLocations("/tmp/", "/tmp/")
 
 
 def run_command(command, working_directory="."):
@@ -22,55 +29,6 @@ def run_command(command, working_directory="."):
     except subprocess.CalledProcessError as e:
         print(f"Error running command: {e}")
         raise
-
-
-def get_filename_from_url(url):
-    # Send a HEAD request to the URL to retrieve headers
-    response = requests.head(url)
-
-    # Check if the request was successful (HTTP status code 200)
-    if response.status_code == 200:
-        # Try to get the filename from the Content-Disposition header
-        content_disposition = response.headers.get('content-disposition', '')
-        if 'filename=' in content_disposition:
-            filename = content_disposition.split('filename=')[1].strip('\'"')
-        else:
-            # If the header is not available, extract the filename from the URL
-            filename = url.split("/")[-1]
-
-        return filename
-    else:
-        print(f"Failed to retrieve headers for {url}, status code: {response.status_code}")
-        return None
-
-
-def download_http(url, save_directory):
-    filename = get_filename_from_url(url)
-
-    if filename:
-        save_path = os.path.join(save_directory, filename)
-
-        response = requests.get(url, stream=True)
-
-        if response.status_code == 200:
-            total_size = int(response.headers.get('content-length', 0))
-
-            with open(save_path, 'wb') as file, tqdm(
-                    desc=filename,
-                    total=total_size,
-                    unit='B',
-                    unit_scale=True,
-                    unit_divisor=1024,
-            ) as bar:
-                for data in response.iter_content(chunk_size=1024):
-                    file.write(data)
-                    bar.update(len(data))
-
-            print(f"Downloaded {filename} to {save_directory}")
-            return filename
-        else:
-            print(f"Failed to download {url}, status code: {response.status_code}")
-            return None
 
 
 def entries_in_directory(directory):
@@ -97,6 +55,8 @@ def file_exists_in_directory(directory, path_item):
         return matching_folders[0]
     elif len(matching_files) == 1 and len(matching_folders) == 0:
         return matching_files[0]
+    elif len(matching_files) == 0 and len(matching_folders) == 0:
+        return None
     else:
         raise RuntimeError(f"Multiple matches found for '{path_item}':\n{matching_entries}")
 
@@ -108,14 +68,14 @@ def fetch_asset(asset_entry, dest_dir):
         if "url" not in asset_entry:
             raise RuntimeError(f"Given asset {asset_entry} not found in {dest_dir} and no source defined to download")
         the_uri = asset_entry["url"]
-        content_file = download_http(the_uri, asset_stash_dir)
+        content_file = uri_fetch.fetch(the_uri, asset_locations.stash_dir)
         if content_file is None:
             raise RuntimeError(f"Given asset {asset_entry} could not be downloaded from {the_uri}")
         if "post-process" in asset_entry:
             action = asset_entry["post-process"]
             if action == "UNPACK":
                 print(f"Extracting {content_file} to {dest_dir}...")
-                unpack.extract(os.path.join(asset_stash_dir, content_file), dest_dir)
+                unpack.extract(os.path.join(asset_locations.stash_dir, content_file), dest_dir)
             else:
                 raise RuntimeError(
                     f"The post-process action {action} is not currently supported for asset {asset_entry}")
@@ -145,11 +105,11 @@ def process_yaml(skript_file):
         skript_content = yaml.load(file, Loader=yaml.FullLoader)
 
     if "asset_dir" in skript_content:
-        asset_dir = skript_content["asset_dir"]
+        asset_locations.asset_dir = skript_content["asset_dir"]
     if "asset_stash_dir" in skript_content:
-        asset_stash_dir = skript_content["asset_stash_dir"]
+        asset_locations.stash_dir = skript_content["asset_stash_dir"]
     else:
-        asset_stash_dir = asset_dir
+        asset_locations.stash_dir = asset_locations.asset_dir
 
     if "tests" in skript_content:
         for test_id, test_data in skript_content["tests"].items():
@@ -162,7 +122,7 @@ def process_yaml(skript_file):
                         combine_multiple_args = False
                         arg_value = []
                         for asset in asset_items:
-                            asset_path = fetch_asset(asset, asset_dir)
+                            asset_path = fetch_asset(asset, asset_locations.asset_dir)
                             if asset_path is None:
                                 raise RuntimeError(f"Failed to acquire {asset}")
                             arg_name = next(iter(asset))
@@ -210,5 +170,7 @@ if __name__ == "__main__":
             process_yaml(file_path)
     except RuntimeError as e:
         print(f"Caught RuntimeError:\n{e}")
+        sys.exit(1)
     except Exception as e:
         print(f"Caught Exception:\n{e}")
+        sys.exit(2)
