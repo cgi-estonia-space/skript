@@ -5,6 +5,7 @@ import sys
 import yaml
 import os
 
+from asset import Asset, AssetError
 import unpack
 import uri_fetch
 
@@ -63,7 +64,11 @@ def file_exists_in_directory(directory, path_item):
 
 def fetch_asset(asset_entry, dest_dir):
     asset_key_arg = next(iter(asset_entry))
-    exist_entry = file_exists_in_directory(dest_dir, asset_entry[asset_key_arg])
+    if asset_entry[asset_key_arg].startswith("/"):
+        return asset_entry[asset_key_arg]
+    else:
+        exist_entry = file_exists_in_directory(dest_dir, asset_entry[asset_key_arg])
+
     if exist_entry is None:
         if "url" not in asset_entry:
             raise RuntimeError(f"Given asset {asset_entry} not found in {dest_dir} and no source defined to download")
@@ -168,6 +173,9 @@ if __name__ == "__main__":
         args = parser.parse_args()
         for file_path in args.yaml_files:
             process_yaml(file_path)
+    except AssetError as e:
+        print(f"There was an error raised concerning asset:\n{e}")
+        sys.exit(10)
     except RuntimeError as e:
         print(f"Caught RuntimeError:\n{e}")
         sys.exit(1)
