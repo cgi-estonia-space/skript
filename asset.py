@@ -44,3 +44,6 @@ class Asset:
             arg_created.append(single_arg)
 
         return arg_created
+
+#    def fetch(self, root_path=""):
+

@@ -6,6 +6,7 @@ import yaml
 import os
 
 from asset import Asset, AssetError
+import skript_fs_util as fs_util
 import unpack
 import uri_fetch
 
@@ -32,42 +33,12 @@ def run_command(command, working_directory="."):
         raise
 
 
-def entries_in_directory(directory):
-    entries = []
-    for root, dirs, files in os.walk(directory):
-        for entry in dirs + files:
-            entry_path = os.path.join(root, entry)
-            entries.append(entry_path)
-    return entries
-
-
-def file_exists_in_directory(directory, path_item):
-    matching_entries = [entry for entry in entries_in_directory(directory) if path_item in entry]
-
-    matching_files = [entry for entry in matching_entries if
-                      os.path.isfile(entry) and entry.endswith(os.path.sep + path_item)]
-    matching_folders = [
-        entry for entry in matching_entries if os.path.isdir(entry) and entry.endswith(os.path.sep + path_item)
-    ]
-
-    if not matching_entries:
-        return None
-    elif len(matching_folders) == 1 and len(matching_files) == 0:
-        return matching_folders[0]
-    elif len(matching_files) == 1 and len(matching_folders) == 0:
-        return matching_files[0]
-    elif len(matching_files) == 0 and len(matching_folders) == 0:
-        return None
-    else:
-        raise RuntimeError(f"Multiple matches found for '{path_item}':\n{matching_entries}")
-
-
 def fetch_asset(asset_entry, dest_dir):
     asset_key_arg = next(iter(asset_entry))
     if asset_entry[asset_key_arg].startswith("/"):
         return asset_entry[asset_key_arg]
     else:
-        exist_entry = file_exists_in_directory(dest_dir, asset_entry[asset_key_arg])
+        exist_entry = fs_util.file_exists_in_directory(dest_dir, asset_entry[asset_key_arg])
 
     if exist_entry is None:
         if "url" not in asset_entry:
@@ -87,7 +58,7 @@ def fetch_asset(asset_entry, dest_dir):
     else:
         return exist_entry
 
-    return file_exists_in_directory(dest_dir, asset_entry[asset_key_arg])
+    return fs_util.file_exists_in_directory(dest_dir, asset_entry[asset_key_arg])
 
 
 def extract_if_multiple_assets_in_argument(asset_entry):
