@@ -17,7 +17,7 @@ def extract(file_path, dest_dir):
         # Unpack TAR or GZipped TAR archive
         with tarfile.open(file_path, 'r:*') as tar_ref:
             tar_ref.extractall(dest_dir)
-            unpacked_items = tar_ref.namelist()
+            unpacked_items = tar_ref.getnames()
     else:
         raise RuntimeError(f"Unsupported archive format for '{file_path}'")
 

@@ -29,3 +29,28 @@ def file_exists_in_directory(directory, path_item):
         return None
     else:
         raise RuntimeError(f"Multiple matches found for '{path_item}':\n{matching_entries}")
+
+
+def create_dirs_if_needed_for(arbitrary_path):
+
+    # Split the path into individual components
+    path_components = [component for component in arbitrary_path.split('/') if component]
+
+    # Initialize a base directory
+    base_directory = ''
+    if arbitrary_path.startswith(os.sep):
+        base_directory = os.sep
+
+    # Iterate over the components and create directories as needed
+    for component in path_components:
+        # Build the full path
+        current_path = os.path.join(base_directory, component)
+
+        # Check if the directory exists
+        if not os.path.exists(current_path):
+            # If it doesn't exist, create it
+            print(f"Creating dir {component} in {os.path.dirname(current_path)}")
+            os.makedirs(current_path)
+
+        # Update the base directory for the next iteration
+        base_directory = current_path

@@ -75,8 +75,13 @@ class Asset:
             if self.__dict__["post-process"] is not None:
                 action = self.__dict__["post-process"]
                 if action == "UNPACK":
-                    print(f"Extracting {content_file} to {asset_store_dir}...")
-                    unpack.extract(os.path.join(fetch_store_dir, content_file), asset_store_dir)
+                    store_path = asset_store_dir
+                    if self.destination is not None:
+                        store_path = os.path.join(asset_store_dir, self.destination)
+                        fs_util.create_dirs_if_needed_for(store_path)
+
+                    print(f"Extracting {content_file} to {store_path}...")
+                    unpack.extract(os.path.join(fetch_store_dir, content_file), store_path)
                 else:
                     raise RuntimeError(
                         f"The post-process action {action} is not currently supported for asset {self.arg_value}")
