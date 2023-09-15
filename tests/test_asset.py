@@ -1,6 +1,7 @@
 import unittest
 
 from asset import Asset, AssetError
+import skript_keyword
 
 
 class TestAsset(unittest.TestCase):
@@ -38,6 +39,22 @@ class TestAsset(unittest.TestCase):
         obj = Asset(dem="srtm_20_20.tif srtm_10_05.tif srtm_05_15.tif")
         result = obj.create_arg_or_args("/tmp")
         expected = ["--dem /tmp/srtm_20_20.tif", "--dem /tmp/srtm_10_05.tif", "--dem /tmp/srtm_05_15.tif"]
+
+        self.assertEqual(result, expected)
+
+    def test_when_arg_is_positional(self):
+        the_dict = {skript_keyword.POSITIONAL_ARGUMENT: "test.txt"}
+        obj = Asset(the_dict)
+        result = obj.create_arg_or_args("/home/foo")
+        expected = ["/home/foo/test.txt"]
+
+        self.assertEqual(result, expected)
+
+    def test_when_arg_has_absolute_path(self):
+        the_dict = {skript_keyword.POSITIONAL_ARGUMENT: "/tmp/tere.txt"}
+        obj = Asset(the_dict)
+        result = obj.create_arg_or_args("/tmp")
+        expected = ["/tmp/tere.txt"]
 
         self.assertEqual(result, expected)
 
