@@ -92,7 +92,8 @@ def process_yaml(skript_file):
                             command_to_launch.append("--" + arg_name)
                         else:
                             command_to_launch.append("-" + arg_name)
-                        command_to_launch.append(arg[arg_name])
+                        if arg[arg_name] is not None:
+                            command_to_launch.append(arg[arg_name])
 
                 print(f"Running test '{test_id}' - {test_data['name']}")
                 launch_count += 1
