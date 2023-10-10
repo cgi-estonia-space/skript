@@ -17,7 +17,6 @@ class AssetLocations:
         self.stash_dir = stash
 
 
-asset_locations = AssetLocations("/tmp/", "/tmp/")
 launch_failures = 0
 exit_on_launch_error = False
 launch_count = 0
@@ -55,17 +54,29 @@ def extract_if_multiple_assets_in_argument(asset_entry):
     return multiple_arg_values_as_dict
 
 
-def process_yaml(skript_file):
+def process_yaml(skript_file, asset_dir=None, stash_dir=None):
+
+    asset_locations = AssetLocations("/tmp/", "/tmp/")
     with open(skript_file, "r") as file:
         skript_content = yaml.load(file, Loader=yaml.FullLoader)
 
-    if "asset_dir" in skript_content:
+    if asset_dir is not None:
+        asset_locations.asset_dir = asset_dir
+    elif "asset_dir" in skript_content:
         asset_locations.asset_dir = skript_content["asset_dir"]
-
-    if "asset_stash_dir" in skript_content:
-        asset_locations.stash_dir = skript_content["asset_stash_dir"]
     else:
-        asset_locations.stash_dir = asset_locations.asset_dir
+        raise RuntimeError(f"Please specify asset directory either via '--asset_dir' or 'asset_dir' key in skript.")
+
+    if stash_dir is not None:
+        asset_locations.stash_dir = stash_dir
+    elif "asset_stash_dir" in skript_content:
+        asset_locations.stash_dir = skript_content["asset_stash_dir"]
+
+    if not os.path.exists(asset_locations.asset_dir) or not os.path.isdir(asset_locations.asset_dir):
+        raise RuntimeError(f"Given asset dir '{asset_locations.asset_dir}' does not exist")
+
+    if not os.path.exists(asset_locations.stash_dir) or not os.path.isdir(asset_locations.stash_dir):
+        raise RuntimeError(f"Given stash dir '{asset_locations.stash_dir}' does not exist")
 
     global launch_count
     if "tests" in skript_content:
@@ -111,12 +122,13 @@ if __name__ == "__main__":
 
         # Add an argument to accept an arbitrary number of file paths
         parser.add_argument('yaml_files', nargs='+', metavar='.yaml file', help='YAML file(s) to process')
+        parser.add_argument('--asset_dir', metavar='asset_directory', help='Path to the asset directory')
 
         # Parse the command-line arguments
         args = parser.parse_args()
         for file_path in args.yaml_files:
             skript_count += 1
-            process_yaml(file_path)
+            process_yaml(file_path, args.asset_dir, args.asset_dir)
     except AssetError as e:
         print(f"There was an error raised concerning asset:\n{e}")
         sys.exit(10)
