@@ -62,15 +62,17 @@ def process_yaml(skript_file, asset_dir=None, stash_dir=None):
 
     if asset_dir is not None:
         asset_locations.asset_dir = asset_dir
+        asset_locations.stash_dir = asset_dir  # Same until specification is well thought through
     elif "asset_dir" in skript_content:
         asset_locations.asset_dir = skript_content["asset_dir"]
+        asset_locations.stash_dir = skript_content["asset_dir"]  # Same until specification is well thought through
     else:
         raise RuntimeError(f"Please specify asset directory either via '--asset_dir' or 'asset_dir' key in skript.")
 
     if stash_dir is not None:
         asset_locations.stash_dir = stash_dir
-    elif "asset_stash_dir" in skript_content:
-        asset_locations.stash_dir = skript_content["asset_stash_dir"]
+    elif "stash_dir" in skript_content:
+        asset_locations.stash_dir = skript_content["stash_dir"]
 
     if not os.path.exists(asset_locations.asset_dir) or not os.path.isdir(asset_locations.asset_dir):
         raise RuntimeError(f"Given asset dir '{asset_locations.asset_dir}' does not exist")
