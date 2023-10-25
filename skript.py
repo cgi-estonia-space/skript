@@ -62,10 +62,12 @@ def process_yaml(skript_file, asset_dir=None, stash_dir=None):
 
     if asset_dir is not None:
         asset_locations.asset_dir = asset_dir
-        asset_locations.stash_dir = asset_dir  # Same until specification is well thought through
+        # Same until specification is well thought through, could be special keyword to remove asset afterward instead.
+        asset_locations.stash_dir = asset_dir
     elif "asset_dir" in skript_content:
         asset_locations.asset_dir = skript_content["asset_dir"]
-        asset_locations.stash_dir = skript_content["asset_dir"]  # Same until specification is well thought through
+        # Same until specification is well thought through, could be special keyword to remove asset afterward instead.
+        asset_locations.stash_dir = skript_content["asset_dir"]
     else:
         raise RuntimeError(f"Please specify asset directory either via '--asset_dir' or 'asset_dir' key in skript.")
 
@@ -93,7 +95,7 @@ def process_yaml(skript_file, asset_dir=None, stash_dir=None):
                             the_asset = Asset(asset)
                             asset_path = the_asset.fetch(asset_locations.asset_dir, asset_locations.stash_dir)
                             if asset_path is None:
-                                raise RuntimeError(f"Failed to acquire {asset}")
+                                raise RuntimeError(f"Failed to find - {asset}. Check the definition values.")
                             arg_set = the_asset.create_arg_or_args(asset_locations.asset_dir)
                             for an_arg in arg_set:
                                 command_to_launch.append(an_arg)

@@ -50,6 +50,14 @@ class TestAsset(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_when_arg_has_part_of_the_path(self):
+        the_dict = {skript_keyword.POSITIONAL_ARGUMENT: "some_dir/another_one/test.txt"}
+        obj = Asset(the_dict)
+        result = obj.create_arg_or_args("/home/foo")
+        expected = ["/home/foo/some_dir/another_one/test.txt"]
+
+        self.assertEqual(result, expected)
+
     def test_when_arg_has_absolute_path(self):
         the_dict = {skript_keyword.POSITIONAL_ARGUMENT: "/tmp/tere.txt"}
         obj = Asset(the_dict)
